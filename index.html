@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Local SDXL Inference</title>
+    <link rel="stylesheet" href="./src/style.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="app-header">
+        <h1>Local Browser SDXL Inference</h1>
+        <p class="subtitle">
+          Load a converted SDXL checkpoint, tune your inference parameters, and render images entirely in your browser.
+        </p>
+      </header>
+      <section class="panel" id="model-panel">
+        <h2>1. Select model checkpoint</h2>
+        <p>
+          Choose a converted SDXL ONNX package (zip or directory). The archive must contain <code>model_index.json</code>,
+          ONNX graph files, tokenizer assets, and scheduler configuration. Use the conversion script described below to
+          transform your original <code>.safetensors</code> checkpoint if needed.
+        </p>
+        <div class="control-row">
+          <label class="file-label" for="model-input">Model package</label>
+          <input id="model-input" type="file" accept=".zip,.safetensors" webkitdirectory directory multiple />
+        </div>
+        <p class="model-status" id="model-status">No model selected.</p>
+        <details class="conversion-details">
+          <summary>How to convert a <code>.safetensors</code> checkpoint for browser use</summary>
+          <ol>
+            <li>Install Python 3.10+ and <code>pip install diffusers optimum onnxruntime accelerate safetensors</code>.</li>
+            <li>Run <code>python -m optimum.exporters.diffusers.onnx --model PATH_TO_SAFETENSORS --task stable-diffusion-xl --opset 17 --device cpu --output exported-model</code>.</li>
+            <li>Zip the contents of <code>exported-model</code> and load the archive above.</li>
+          </ol>
+        </details>
+      </section>
+      <section class="panel" id="prompt-panel">
+        <h2>2. Configure generation</h2>
+        <div class="prompt-grid">
+          <label class="prompt-label" for="prompt-input">Prompt</label>
+          <textarea id="prompt-input" rows="3" placeholder="Describe the image you want to create"></textarea>
+          <label class="prompt-label" for="negative-prompt-input">Negative prompt</label>
+          <textarea id="negative-prompt-input" rows="2" placeholder="Describe what to avoid (optional)"></textarea>
+        </div>
+        <div class="control-grid">
+          <label for="steps-input">Steps</label>
+          <input id="steps-input" type="number" min="1" max="150" value="30" />
+          <label for="cfg-input">CFG Scale</label>
+          <input id="cfg-input" type="number" min="1" max="30" step="0.1" value="7.5" />
+          <label for="sampler-select">Sampler</label>
+          <select id="sampler-select">
+            <option value="deterministic">Deterministic (η=0)</option>
+            <option value="ancestral">Ancestral (η=1)</option>
+            <option value="ancestral-half">Ancestral (η=0.5)</option>
+          </select>
+          <label for="scheduler-select">Scheduler</label>
+          <select id="scheduler-select">
+            <option value="pndm">PNDM (accurate)</option>
+            <option value="ddim">DDIM (flexible)</option>
+          </select>
+          <label for="seed-input">Seed</label>
+          <input id="seed-input" type="text" placeholder="random" />
+        </div>
+        <button id="generate-button" class="primary">Generate image</button>
+        <p class="status-line" id="status-line">Idle.</p>
+      </section>
+      <section class="panel" id="output-panel">
+        <h2>3. Result</h2>
+        <canvas id="result-canvas" width="1024" height="1024"></canvas>
+      </section>
+      <section class="panel" id="log-panel">
+        <h2>Runtime log</h2>
+        <pre id="log-output" class="log-output"></pre>
+      </section>
+    </main>
+    <script type="module" src="./src/app.js"></script>
+  </body>
+</html>
